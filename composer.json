@@ -1,0 +1,54 @@
+{
+    "name": "ttys3/mw-oauth2client",
+    "type": "mediawiki-extension",
+    "description": "Act as a client to any OAuth2 server",
+    "keywords": [
+        "wiki",
+        "MediaWiki",
+        "extension",
+        "OAuth2",
+        "Client",
+        "Login"
+    ],
+    "homepage": "https://ttys3.net",
+    "config": {
+        "optimize-autoloader": true,
+        "prepend-autoloader": false
+    },
+    "require": {
+        "php": ">=5.7",
+        "league/oauth2-client": "^2.4",
+        "composer/installers": "^1.9"
+    },
+    "authors": [
+        {
+            "name": "荒野無燈",
+            "homepage": "https://ttys3.net",
+            "role": "Developer"
+        },
+        {
+            "name": "Joost de Keijzer",
+            "homepage": "http://dekeijzer.org"
+        },
+        {
+            "name": "Nischay Nahata",
+            "homepage": "https://www.mediawiki.org/wiki/User:Nischayn22"
+        },
+        {
+            "name": "Schine GmbH",
+            "homepage": "https://star-made.org"
+        }
+    ],
+    "support": {
+        "issues": "https://https://github.com/ttys3/MW-OAuth2Client/issues"
+    },
+    "scripts": {
+        "test": [
+            "phpcs -p -s"
+        ],
+        "fix": "phpcbf"
+    },
+    "require-dev": {
+        "mediawiki/mediawiki-codesniffer": "^30.0"
+    }
+}

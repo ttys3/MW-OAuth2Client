@@ -13,6 +13,10 @@ $specialPageAliases['en'] = array(
 	'OAuth2Client' => array( 'OAuth2Client' ),
 );
 
+$specialPageAliases['zh-hans'] = array(
+    'OAuth2Client' => array( 'OAuth2Client' ),
+);
+
 /** Dutch (Nederlands) */
 $specialPageAliases['nl'] = array(
 	'OAuth2Client' => array( 'OAuth2Client' ),

@@ -17,6 +17,7 @@
 if ( !defined( 'MEDIAWIKI' ) ) {
 	die( 'This is a MediaWiki extension, and must be run from within MediaWiki.' );
 }
+
 require __DIR__.'/JsonHelper.php';
 
 class SpecialOAuth2Client extends SpecialPage {
@@ -41,8 +42,6 @@ class SpecialOAuth2Client extends SpecialPage {
 		parent::__construct('OAuth2Client'); // ???: wat doet dit?
 		global $wgOAuth2Client, $wgScriptPath;
 		global $wgServer, $wgArticlePath;
-
-		require __DIR__ . '/vendors/oauth2-client/vendor/autoload.php';
 
 		$this->_provider = new \League\OAuth2\Client\Provider\GenericProvider([
 			'clientId'                => $wgOAuth2Client['client']['id'],    // The client ID assigned to you by the provider
@@ -105,17 +104,26 @@ class SpecialOAuth2Client extends SpecialPage {
 				}
 			}
 
+            $error = filter_input(INPUT_GET, 'error');
+			if (!empty($error)) {
+                throw new \ErrorPageError($error, filter_input(INPUT_GET, 'error_description'));
+            }
 			// Try to get an access token using the authorization code grant.
 			$accessToken = $this->_provider->getAccessToken('authorization_code', [
-				'code' => $_GET['code']
+				'code' => filter_input(INPUT_GET, 'code')
 			]);
 		} catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
-			exit($e->getMessage()); // Failed to get the access token or user details.
+			// Failed to get the access token or user details.
+            throw new \ErrorPageError('Error '. $e->getCode(), $e->getMessage());
 		} catch (UnexpectedValueException $e) {
-			exit($e->getMessage());
-		}
+            throw new \ErrorPageError('Error '. $e->getCode(), $e->getMessage());
+		} catch (\ErrorPageError $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw new \ErrorPageError('Error '. $e->getCode(), $e->getMessage());
+        }
 
-		$resourceOwner = $this->_provider->getResourceOwner($accessToken);
+        $resourceOwner = $this->_provider->getResourceOwner($accessToken);
 		$user = $this->_userHandling( $resourceOwner->toArray() );
 		$user->setCookies();
 
@@ -142,7 +150,7 @@ class SpecialOAuth2Client extends SpecialPage {
 		$wgOut->setPagetitle( wfMessage( 'oauth2client-login-header', $service_name)->text() );
 		if ( !$wgUser->isLoggedIn() ) {
 			$wgOut->addWikiMsg( 'oauth2client-you-can-login-to-this-wiki-with-oauth2', $service_name );
-			$wgOut->addWikiMsg( 'oauth2client-login-with-oauth2', $this->getTitle( 'redirect' )->getPrefixedURL(), $service_name );
+			$wgOut->addWikiMsg( 'oauth2client-login-with-oauth2', $this->getPageTitle( 'redirect' )->getPrefixedURL(), $service_name );
 
 		} else {
 			$wgOut->addWikiMsg( 'oauth2client-youre-already-loggedin' );
@@ -156,10 +164,13 @@ class SpecialOAuth2Client extends SpecialPage {
 		$username = JsonHelper::extractValue($response, $wgOAuth2Client['configuration']['username']);
 		$email =  JsonHelper::extractValue($response, $wgOAuth2Client['configuration']['email']);
 
+		if (empty($username) || empty($email)) {
+            throw new \ErrorPageError('Get User Profile Failed', 'Invalid username or email');
+        }
+
 		$user = User::newFromName($username, 'creatable');
 		if (!$user) {
-			throw new MWException('Could not create user with username:' . $username);
-			die();
+			throw new \ErrorPageError('Create User Failed', 'Could not create user with username:' . $username);
 		}
 		$user->setRealName($username);
 		$user->setEmail($email);
